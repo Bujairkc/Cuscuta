@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StreamVault</title>
+<!-- Font Awesome 6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .settings-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+  .settings-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    cursor: default;
+    transition: background 0.2s;
+  }
+  .settings-item:hover { background: rgba(255,255,255,0.05); }
+  .settings-item-label { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .settings-item-desc { font-size: 13px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-icon active" id="home-btn" title="Home" onclick="showHome()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+  </div>
+  <div class="sidebar-icon" id="explore-btn" title="Explore" onclick="openExplore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16.2 7.8l-4.67 4.67-2.13 5.2 5.2-2.13 4.67-4.67z"/></svg>
+  </div>
+  <div class="sidebar-icon" id="ext-btn" title="Extensions" onclick="openExtensions()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+  </div>
+  <div class="sidebar-icon" id="saved-btn" title="Saved" style="margin-top:auto" onclick="openSaved()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+  </div>
+  <div class="sidebar-icon" id="settings-btn" title="Settings" onclick="openSettings()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-btn" id="dl-btn" title="Downloads" onclick="openDownloads()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </div>
+    <div class="topbar-btn" style="margin-left:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3m13-5v3a2 2 0 01-2 2h-3"/></svg>
+    </div>
+    <div class="topbar-btn profile-toggle-btn" style="margin-left:8px" id="profile-btn" onclick="toggleProfileMenu(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </header>
+
+  <div class="content">
+    <div id="home-view">
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">Continue Watching</span>
+          <a class="see-all" href="#">See All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></a>
+        </div>
+        <div class="cw-grid" id="cw-grid"></div>
+      </section>
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">Popular – Movies</span>
+          <a class="see-all" href="#">See All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></a>
+        </div>
+        <div class="grid" id="movies-grid"></div>
+      </section>
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">Popular – Series</span>
+          <a class="see-all" href="#">See All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></a>
+        </div>
+        <div class="grid" id="series-grid"></div>
+      </section>
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">Featured – Movie</span>
+          <a class="see-all" href="#">See All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></a>
+        </div>
+        <div class="grid" id="featured-grid"></div>
+      </section>
+    </div>
+
+    <div id="explore-view" style="display:none">
+      <section class="section">
+        <div class="explore-search-wrap">
+          <div class="explore-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="explore-search-input" placeholder="Search movies and TV series..." oninput="handleExploreSearch()">
+          </div>
+        </div>
+        <div class="grid" id="explore-results-grid"></div>
+      </section>
+    </div>
+
+    <div id="settings-view" style="display:none">
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">Settings</span>
+          <a class="see-all" href="#" onclick="showHome()">Back to Home <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+        </div>
+        <div class="settings-list">
+          <div class="settings-item">
+            <div class="settings-item-label">Account</div>
+            <div class="settings-item-desc">Manage your Telegram session and profile</div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-label">Downloads</div>
+            <div class="settings-item-desc">Configure download path and concurrent tasks</div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-label">Appearance</div>
+            <div class="settings-item-desc">Customize theme and card layout</div>
+          </div>
+          <div class="settings-item" onclick="clearDownloadData()" style="cursor:pointer">
+            <div class="settings-item-label" style="color:#ff4d4d">Clear Download History & Cache</div>
+            <div class="settings-item-desc">Wipe download progress and Telegram's internal file cache</div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-label">About</div>
+            <div class="settings-item-desc">StreamVault v1.0.0 - Open Source Media Center</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PAGE -->
+<div class="detail-page" id="detail-page">
+  <div class="detail-bg">
+    <div class="detail-bg-fill" id="detail-bg-fill"></div>
+    <div class="detail-bg-overlay"></div>
+  </div>
+
+  <div class="detail-topbar">
+    <button class="back-btn" onclick="closeDetail()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back
+    </button>
+    <div class="detail-topbar-right">
+      <div class="topbar-btn" title="Sources">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+      </div>
+      <div class="topbar-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3m13-5v3a2 2 0 01-2 2h-3"/></svg>
+      </div>
+      <div class="topbar-btn profile-toggle-btn" onclick="toggleProfileMenu(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-left">
+      <div class="detail-logo-sub" id="d-sub"></div>
+      <div class="detail-logo-text" id="d-title"></div>
+
+      <div class="detail-meta">
+        <span id="d-duration"></span>
+        <span id="d-year"></span>
+        <span id="d-progress" class="detail-progress"></span>
+        <div class="imdb-badge">IMDb <strong id="d-rating"></strong></div>
+      </div>
+
+      <div class="detail-label">GENRES</div>
+      <div class="tag-row" id="d-genres"></div>
+
+      <div class="detail-label">CAST</div>
+      <div class="tag-row" id="d-cast"></div>
+
+      <div class="detail-label">DIRECTORS</div>
+      <div class="tag-row" id="d-directors"></div>
+
+      <div class="detail-label" style="margin-top:20px">SUMMARY</div>
+      <p class="detail-summary" id="d-summary"></p>
+
+      <div id="series-selector" style="display:none; margin-top:30px;">
+        <div class="detail-label">SEASONS</div>
+        <div id="d-seasons" class="tag-row" style="margin-bottom:20px"></div>
+
+        <div class="detail-label">EPISODES</div>
+        <div id="d-episodes" class="episodes-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-actions">
+    <button class="action-btn" onclick="playSelectedSource()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+      Play
+    </button>
+    <button class="action-btn" id="main-download-btn" onclick="downloadSelectedSource()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span class="btn-text">Download</span>
+    </button>
+    <button class="action-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    </button>
+    <button class="action-btn action-icon-only">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </button>
+  </div>
+
+  <!-- STREMIO-STYLE SOURCE PANEL -->
+  <div class="source-panel" id="sourcePanel">
+    <div class="source-header">
+      <select id="sourceFilter" class="source-filter" onchange="filterSources()">
+        <option value="all">All</option>
+      </select>
+    </div>
+    <div class="source-results" id="sourceResults"></div>
+    <div class="source-footer">
+      <div id="sourceStatus">Click a movie to see sources</div>
+      <div class="source-progress">
+        <div class="source-progress-bar" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DOWNLOAD OVERLAY -->
+<div class="dl-overlay" id="dl-overlay" onclick="closeDownloads()"></div>
+
+<!-- DOWNLOAD PANEL -->
+<div class="dl-panel" id="dl-panel">
+  <div class="dl-header">
+    <div class="dl-header-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Downloads
+      <span class="dl-badge" id="dl-badge">0</span>
+    </div>
+    <button class="dl-close" onclick="closeDownloads()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="dl-list" id="dl-list">
+    <div class="dl-empty" id="dl-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>No active downloads.</span>
+    </div>
+  </div>
+</div>
+
+<!-- EXT OVERLAY -->
+<div class="ext-overlay" id="ext-overlay" onclick="closeExtensions()"></div>
+
+<!-- EXTENSIONS PANEL -->
+<div class="ext-panel" id="ext-panel">
+  <div class="ext-header">
+    <div class="ext-header-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+      Extensions
+    </div>
+    <button class="ext-close" onclick="closeExtensions()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="ext-tabs">
+    <div class="ext-tab active" id="ext-tab-search" onclick="switchExtTab('search')">Search</div>
+    <div class="ext-tab" id="ext-tab-added" onclick="switchExtTab('added')">My Extensions</div>
+  </div>
+  <div id="ext-search-tab">
+    <div class="ext-search-wrap">
+      <div class="ext-search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="ext-search-input" placeholder="Search bots or channels…" oninput="searchExtensions()">
+      </div>
+    </div>
+    <div class="ext-results" id="ext-results"></div>
+  </div>
+  <div id="ext-added-tab" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
+    <div class="ext-added-list" id="ext-added-list"></div>
+  </div>
+</div>
+
+<!-- SAVED OVERLAY -->
+<div class="saved-overlay" id="saved-overlay" onclick="closeSaved()"></div>
+
+<!-- SAVED PANEL -->
+<div class="saved-panel" id="saved-panel">
+  <div class="saved-header">
+    <div class="saved-header-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      Saved
+      <span class="saved-count" id="saved-count">0</span>
+    </div>
+    <button class="saved-close" onclick="closeSaved()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="saved-list" id="saved-list">
+    <div class="saved-empty" id="saved-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <span>No saved movies yet.<br>Click any movie to save it here.</span>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+  <div class="auth-blob auth-blob-1"></div>
+  <div class="auth-blob auth-blob-2"></div>
+  <div class="auth-blob auth-blob-3"></div>
+
+  <div class="auth-card">
+    <div class="steps-indicator" id="step-dots">
+      <div class="step-dot active" id="dot-0"></div>
+      <div class="step-dot" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+    </div>
+
+    <!-- PAGE 0: API credentials -->
+    <div class="auth-page active" id="page-0">
+      <div class="step-head">
+        <div class="step-label">Step 1 of 3</div>
+        <div class="step-title">API credentials</div>
+        <div class="step-desc">Enter your Telegram API credentials.</div>
+      </div>
+      <div class="info-box">
+        Go to <strong><a href="https://my.telegram.org" target="_blank" style="color:var(--accent2)">my.telegram.org</a></strong> → API tools.
+      </div>
+      <div class="auth-field">
+        <label class="auth-field-label">API ID (api_id)</label>
+        <input class="auth-input-solo" type="text" id="api-id-input" placeholder="e.g. 1234567" inputmode="numeric">
+        <div class="auth-error-msg" id="apiid-err">API ID is required.</div>
+      </div>
+      <div class="auth-field">
+        <label class="auth-field-label">API Hash (api_hash)</label>
+        <input class="auth-input-solo" type="text" id="api-hash-input" placeholder="32-character hex string">
+        <div class="auth-error-msg" id="apihash-err">API Hash is required.</div>
+      </div>
+      <button class="auth-btn auth-btn-primary" id="btn-api-next" onclick="submitAPI()">
+        Continue
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <!-- PAGE 1: Phone -->
+    <div class="auth-page" id="page-1">
+      <div class="step-head">
+        <div class="step-label">Step 2 of 3</div>
+        <div class="step-title">Enter your number</div>
+        <div class="step-desc">Verification code will be sent via Telegram.</div>
+      </div>
+      <div class="auth-field">
+        <label class="auth-field-label">Phone number</label>
+        <div class="phone-field-wrap">
+          <div class="input-wrap" id="phone-input-wrap">
+            <div class="country-select" id="country-select" onclick="toggleDropdown(event)">
+              <span class="country-flag" id="sel-flag">🇮🇳</span>
+              <span class="country-code" id="sel-code">+91</span>
+              <span class="country-chevron" id="sel-chevron">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </div>
+            <input type="tel" id="phone-input" class="auth-input" placeholder="Phone number" maxlength="15">
+          </div>
+          <div class="country-dropdown" id="country-dropdown">
+            <div class="cd-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" placeholder="Search country…" id="cd-search-input" oninput="filterCountries()" onclick="event.stopPropagation()">
+            </div>
+            <div class="cd-list" id="cd-list"></div>
+          </div>
+        </div>
+        <div class="auth-error-msg" id="phone-err">Please enter a valid phone number.</div>
+      </div>
+      <div id="phone-status"></div>
+      <button class="auth-btn auth-btn-primary" id="btn-phone-next" onclick="sendCode()">
+        Send Code
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="auth-btn" style="margin-top:10px" onclick="goPage(0)">← Back</button>
+    </div>
+
+    <!-- PAGE 2: OTP -->
+    <div class="auth-page" id="page-2">
+      <div class="step-head">
+        <div class="step-label">Step 3 of 3</div>
+        <div class="step-title">Enter the code</div>
+        <div class="step-desc">Code sent to <strong id="phone-display" style="color:var(--accent2)"></strong></div>
+      </div>
+      <div class="auth-field">
+        <label class="auth-field-label">Verification code</label>
+        <div class="otp-row" id="otp-row">
+          <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+        </div>
+        <div class="auth-error-msg" id="otp-err"></div>
+        <div class="resend-row">Didn't get it? <span id="resend-btn" onclick="resendCode()">Resend</span></div>
+      </div>
+      <div id="otp-status"></div>
+      <button class="auth-btn auth-btn-primary" id="btn-otp-next" onclick="submitCode()">
+        Verify
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="auth-btn" style="margin-top:10px" onclick="goPage(1)">← Back</button>
+    </div>
+
+    <!-- PAGE 3: 2FA -->
+    <div class="auth-page" id="page-3">
+      <div class="step-head">
+        <div class="step-label">Two-step verification</div>
+        <div class="step-title">Enter password</div>
+        <div class="step-desc">Enter your Telegram 2FA password.</div>
+      </div>
+      <div class="auth-field">
+        <label class="auth-field-label">Password</label>
+        <input class="tfa-input" type="password" id="tfa-input" placeholder="Enter your 2FA password">
+        <div class="auth-error-msg" id="tfa-err"></div>
+      </div>
+      <div id="tfa-status"></div>
+      <button class="auth-btn auth-btn-primary" id="btn-tfa-next" onclick="submit2FA()">
+        Sign In
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="auth-btn" style="margin-top:10px" onclick="goPage(2)">← Back</button>
+    </div>
+
+    <!-- PAGE 4: Success -->
+    <div class="auth-page" id="page-4">
+      <div class="success-icon">
+        <div class="success-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+      <div class="step-head" style="text-align:center;margin-bottom:0">
+        <div class="step-title" style="font-size:26px;margin-bottom:8px">Signed in!</div>
+        <div class="step-desc" id="success-desc">Welcome back. Opening StreamVault…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MENU -->
+<div class="profile-menu" id="profile-menu">
+  <div class="profile-info">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <div id="user-profile-avatar" style="width:40px;height:40px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;">?</div>
+        <div style="flex:1;min-width:0;">
+            <div class="profile-name" id="user-profile-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading...</div>
+            <div id="user-profile-username" style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+    </div>
+    <div class="profile-label">Telegram Account</div>
+  </div>
+  <div class="profile-btn logout" onclick="logout()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Logout
+  </div>
+</div>
+
+
+<!-- PLAYER VIEW -->
+<div class="player-view" id="player-view" style="display:none">
+  <div class="video-wrapper" id="videoWrapper">
+    <video id="main-player" autoplay style="display:block; width:100%; height:100%; object-fit:contain; background:#000;"></video>
+    <audio id="audio-companion" style="display:none"></audio>
+
+    <!-- PILL CONTROLS -->
+    <div class="pill-controls" id="pillControls">
+      <div class="pill-left">
+        <button class="pill-btn" id="pillBack" title="Close Player">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <button class="pill-btn play-icon" id="pillPlay" aria-label="Play">
+          <i class="fas fa-play"></i>
+        </button>
+        <button class="pill-btn" id="pillVolume" aria-label="Volume">
+          <i class="fas fa-volume-up"></i>
+        </button>
+      </div>
+
+      <div class="pill-mid">
+        <span class="time-text" id="currentTimeDisplay">0:00</span>
+        <div class="progress-group" id="progressGroup">
+          <div class="track-wrapper" id="trackWrapper">
+            <div class="track-base">
+              <div class="track-played" id="playedFill" style="width: 0%;"></div>
+              <div class="track-remaining"></div>
+            </div>
+            <div class="progress-thumb" id="progressThumb" style="left: 0%;"></div>
+            <div class="seek-overlay" id="seekOverlay"></div>
+          </div>
+        </div>
+        <span class="time-text white" id="durationDisplay">0:00</span>
+      </div>
+
+      <div class="pill-right">
+        <!-- GEAR BUTTON – anchor for popover -->
+        <button class="pill-btn" id="pillFullscreen" title="Toggle Fullscreen">
+          <i class="fas fa-expand"></i>
+        </button>
+        <button class="pill-btn" id="gearBtn" aria-label="Settings">
+          <i class="fas fa-cog"></i>
+        </button>
+
+        <!-- GLASSMORPHISM POPOVER -->
+        <div class="settings-popover" id="settingsPopover">
+
+          <!-- MAIN PANEL -->
+          <div class="popover-panel active" id="mainPanel">
+            <div class="menu-item" data-panel="audioPanel">
+              <i class="fas fa-language"></i>
+              <div class="menu-item-text">
+                <span>Audio Track</span>
+                <small id="audioSelectionLabel">Default</small>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+
+            <div class="menu-item" data-panel="subtitlePanel">
+              <i class="fas fa-closed-captioning"></i>
+              <div class="menu-item-text">
+                <span>Subtitles</span>
+                <small id="subtitleSelectionLabel">Off</small>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+          </div>
+
+          <!-- AUDIO SELECTION PANEL -->
+          <div class="popover-panel" id="audioPanel">
+            <div class="submenu-header">
+              <button class="back-btn" data-panel="mainPanel">
+                <i class="fas fa-chevron-left"></i> Audio Track
+              </button>
+            </div>
+            <div id="popover-audio-list"></div>
+          </div>
+
+          <!-- SUBTITLE SELECTION PANEL -->
+          <div class="popover-panel" id="subtitlePanel">
+            <div class="submenu-header">
+              <button class="back-btn" data-panel="mainPanel">
+                <i class="fas fa-chevron-left"></i> Subtitles
+              </button>
+            </div>
+            <div id="popover-subtitle-list"></div>
+          </div>
+
+        </div> <!-- End Popover -->
+      </div> <!-- End Pill Right -->
+    </div> <!-- End Pill Controls -->
+  </div>
+
+  <div id="player-loading-overlay" class="player-loading-overlay">
+    <div class="player-spinner"></div>
+    <div class="player-loading-text" id="player-loading-text">Preparing playback...</div>
+    <div class="player-loading-subtext" id="player-loading-subtext">Initializing subtitles...</div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/utils/logger.js"></script>
+<script src="js/utils/format.js"></script>
+<script src="js/utils/mediaFormatters.js"></script>
+<script src="js/playback/historyManager.js"></script>
+<script src="js/logic/heuristics.js"></script>
+<script src="js/core/persistence.js"></script>
+<script src="login.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/home.js"></script>
+<script src="js/detail.js"></script>
+<script src="js/sources/db.js"></script>
+<script src="js/sources/ui.js"></script>
+<script src="js/sources.js"></script>
+<script src="js/movies.js"></script>
+<script src="js/homeRenderer.js"></script>
+<script src="js/extensions.js"></script>
+<script src="js/saved.js"></script>
+<script src="js/downloads.js"></script>
+<script src="js/audio/AudioSyncController.js"></script>
+<script src="js/audio/MSEAudioController.js"></script>
+<script src="js/MP4BufferController.js"></script>
+<script src="js/MP4MSEPlayer.js"></script>
+<script src="js/playerControls.js"></script>
+<script src="js/player.js"></script>
+<script src="js/playback.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/login/countries.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

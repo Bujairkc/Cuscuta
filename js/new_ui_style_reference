@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interstellar · Glass Settings Popover</title>
+  <!-- Font Awesome 6 (free) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0b0d10;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      padding: 1.5rem;
+    }
+
+    .player-card {
+      max-width: 820px;
+      width: 100%;
+      background: #0b0d10;
+      border-radius: 2rem;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+      transition: box-shadow 0.3s;
+    }
+
+    .player-card:hover {
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 215, 0, 0.08);
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #0b0d10;
+      overflow: visible; /* allow popover to overflow outside video box */
+    }
+
+    .interstellar-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* ----- PILL CONTROL BAR ----- */
+    .pill-controls {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 28px;
+      background: rgba(200, 200, 200, 0.18);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.04);
+      z-index: 5;
+    }
+
+    .pill-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill-mid {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pill-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .pill-btn {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 10px;
+      width: auto;
+      height: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.95;
+      padding: 0;
+      line-height: 1;
+      transition: opacity 0.15s;
+      position: relative;
+    }
+
+    .pill-btn:active {
+      opacity: 0.6;
+    }
+
+    .pill-btn i {
+      font-size: 10px;
+    }
+
+    .play-icon i {
+      font-size: 11px;
+    }
+
+    .time-text {
+      font-size: 8px;
+      font-weight: 450;
+      color: #d0d8e0;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .time-text.white {
+      color: #f0f4fa;
+    }
+
+    /* ----- PROGRESS BAR ----- */
+    .progress-group {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .track-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 20px;
+      width: 130px;
+    }
+
+    .track-base {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 2.5px;
+      border-radius: 4px;
+      width: 100%;
+      display: flex;
+      pointer-events: none;
+    }
+
+    .track-played {
+      background: #ffffff;
+      height: 100%;
+      border-radius: 4px 0 0 4px;
+      width: 48%;
+      transition: width 0.05s linear;
+    }
+
+    .track-remaining {
+      background: rgba(255, 255, 255, 0.35);
+      height: 100%;
+      border-radius: 0 4px 4px 0;
+      flex: 1;
+    }
+
+    .progress-thumb {
+      position: absolute;
+      top: 50%;
+      left: 48%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      background: #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(255,255,255,0.3);
+      pointer-events: none;
+      transition: left 0.05s linear;
+      z-index: 2;
+    }
+
+    .seek-overlay {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 3;
+      background: transparent;
+    }
+
+    /* ----- REPLACED: GLASSMORPHISM POPOVER ----- */
+    .settings-popover {
+      position: absolute;
+      bottom: 42px;
+      right: -90px;
+
+      width: 240px;
+
+      background: rgba(20,20,20,.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+
+      padding: 12px;
+
+      box-shadow:
+        0 12px 40px rgba(0,0,0,.45),
+        inset 0 1px 0 rgba(255,255,255,.08);
+
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(8px);
+
+      transition: .2s ease;
+      z-index: 999;
+    }
+
+    .settings-popover.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Arrow pseudo-element */
+    .settings-popover::after {
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      right: 98px;
+
+      width: 12px;
+      height: 12px;
+
+      background: rgba(20,20,20,.45);
+
+      border-right: 1px solid rgba(255,255,255,.12);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+
+      transform: rotate(45deg);
+      backdrop-filter: blur(20px);
+      z-index: -1;
+    }
+
+    /* ----- MENU ITEMS & SUB-LEVEL NAVIGATION ----- */
+    .popover-panel {
+      display: none;
+      width: 100%;
+    }
+
+    .popover-panel.active {
+      display: block;
+      animation: popoverFadeIn 0.15s ease-out;
+    }
+
+    @keyframes popoverFadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .menu-item:hover {
+      background: rgba(255,255,255,.08);
+    }
+
+    .menu-item i {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.85);
+      width: 16px;
+      text-align: center;
+    }
+
+    .menu-item-text {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.2;
+      color: #ffffff;
+    }
+
+    .menu-item small {
+      color: rgba(255,255,255,.55);
+      font-size: 10px;
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .menu-item .fa-chevron-right {
+      margin-left: auto;
+      opacity: .5;
+      font-size: 10px;
+    }
+
+    /* Subpanel Selection Controls */
+    .submenu-header {
+      display: flex;
+      align-items: center;
+      padding-bottom: 8px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+    }
+
+    .popover-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 450;
+      color: #ffffff;
+      cursor: pointer;
+      border-radius: 10px;
+      margin-bottom: 2px;
+      transition: background 0.1s;
+    }
+
+    .popover-option:last-child {
+      margin-bottom: 0;
+    }
+
+    .popover-option:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .popover-option .check {
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 10px;
+      width: 16px;
+      text-align: right;
+    }
+
+    .popover-option.active .check {
+      color: #ffffff;
+    }
+
+    .popover-option .sub {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.45);
+      font-weight: 400;
+      display: block;
+      margin-top: 1px;
+    }
+
+    /* ----- RESPONSIVE ADAPTATIONS ----- */
+    @media (max-width: 640px) {
+      .pill-controls {
+        width: 270px;
+        height: 24px;
+        padding: 0 10px;
+        bottom: 14px;
+        border-radius: 12px;
+      }
+      .track-wrapper {
+        width: 100px;
+      }
+      .progress-thumb {
+        width: 8px;
+        height: 8px;
+      }
+      .pill-left { gap: 8px; }
+      .pill-mid { gap: 10px; }
+      .pill-right { gap: 8px; }
+      .time-text { font-size: 7px; }
+      .pill-btn i { font-size: 9px; }
+      .play-icon i { font-size: 10px; }
+
+      .settings-popover {
+        width: 220px;
+        bottom: 38px;
+        right: -75px;
+        padding: 10px;
+      }
+      .settings-popover::after {
+        right: 83px;
+      }
+      .menu-item { padding: 8px; }
+    }
+
+    @media (max-width: 480px) {
+      .pill-controls {
+        width: 220px;
+        height: 20px;
+        padding: 0 8px;
+        bottom: 12px;
+        border-radius: 10px;
+      }
+      .track-wrapper {
+        width: 70px;
+      }
+      .progress-thumb {
+        width: 7px;
+        height: 7px;
+      }
+      .pill-left { gap: 6px; }
+      .pill-mid { gap: 8px; }
+      .pill-right { gap: 6px; }
+      .time-text { font-size: 6px; }
+      .pill-btn i { font-size: 7px; }
+      .play-icon i { font-size: 8px; }
+
+      .settings-popover {
+        width: 190px;
+        bottom: 34px;
+        right: -45px;
+        padding: 8px;
+        border-radius: 14px;
+      }
+      .settings-popover::after {
+        right: 53px;
+        width: 10px;
+        height: 10px;
+        bottom: -5px;
+      }
+      .menu-item { padding: 6px; gap: 8px; }
+      .menu-item-text { font-size: 11px; }
+      .menu-item small { font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="player-card">
+    <div class="video-wrapper">
+      <img
+        class="interstellar-bg"
+        src="https://images.unsplash.com/photo-1504333638930-c8787321eee0?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        alt="Interstellar – Gargantua black hole"
+        loading="lazy"
+      >
+
+      <!-- PILL CONTROLS -->
+      <div class="pill-controls" id="pillControls">
+        <div class="pill-left">
+          <button class="pill-btn play-icon" aria-label="Play">
+            <i class="fas fa-play"></i>
+          </button>
+          <button class="pill-btn" aria-label="Volume">
+            <i class="fas fa-volume-up"></i>
+          </button>
+        </div>
+
+        <div class="pill-mid">
+          <span class="time-text">1:48</span>
+          <div class="progress-group" id="progressGroup">
+            <div class="track-wrapper" id="trackWrapper">
+              <div class="track-base">
+                <div class="track-played" id="playedFill" style="width: 48%;"></div>
+                <div class="track-remaining"></div>
+              </div>
+              <div class="progress-thumb" id="progressThumb" style="left: 48%;"></div>
+              <div class="seek-overlay" id="seekOverlay"></div>
+            </div>
+          </div>
+          <span class="time-text white">0:35</span>
+        </div>
+
+        <div class="pill-right">
+          <!-- GEAR BUTTON – anchor for popover -->
+          <button class="pill-btn" id="gearBtn" aria-label="Settings">
+            <i class="fas fa-cog"></i>
+          </button>
+
+          <!-- MODERN STREAMING POPOVER (nested in control flow for positioning) -->
+          <div class="settings-popover" id="settingsPopover">
+
+            <!-- MAIN PANEL -->
+            <div class="popover-panel active" id="mainPanel">
+              <div class="menu-item" data-panel="audioPanel">
+                <i class="fas fa-language"></i>
+                <div class="menu-item-text">
+                  <span>Audio Track</span>
+                  <small id="audioSelectionLabel">English (Original)</small>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+
+              <div class="menu-item" data-panel="subtitlePanel">
+                <i class="fas fa-closed-captioning"></i>
+                <div class="menu-item-text">
+                  <span>Subtitles</span>
+                  <small id="subtitleSelectionLabel">English (CC)</small>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+            </div>
+
+            <!-- AUDIO SELECTION PANEL -->
+            <div class="popover-panel" id="audioPanel">
+              <div class="submenu-header">
+                <button class="back-btn" data-panel="mainPanel">
+                  <i class="fas fa-chevron-left"></i> Audio Track
+                </button>
+              </div>
+              <div class="popover-option active" data-value="English (Original)">
+                <span>English (Original) <span class="sub">5.1 Surround</span></span>
+                <span class="check"><i class="fas fa-check"></i></span>
+              </div>
+              <div class="popover-option" data-value="Hindi">
+                <span>Hindi <span class="sub">Stereo</span></span>
+                <span class="check"></span>
+              </div>
+              <div class="popover-option" data-value="Tamil">
+                <span>Tamil <span class="sub">Stereo</span></span>
+                <span class="check"></span>
+              </div>
+            </div>
+
+            <!-- SUBTITLE SELECTION PANEL -->
+            <div class="popover-panel" id="subtitlePanel">
+              <div class="submenu-header">
+                <button class="back-btn" data-panel="mainPanel">
+                  <i class="fas fa-chevron-left"></i> Subtitles
+                </button>
+              </div>
+              <div class="popover-option active" data-value="English (CC)">
+                <span>English (CC)</span>
+                <span class="check"><i class="fas fa-check"></i></span>
+              </div>
+              <div class="popover-option" data-value="Hindi">
+                <span>Hindi</span>
+                <span class="check"></span>
+              </div>
+              <div class="popover-option" data-value="Off">
+                <span>Off</span>
+                <span class="check"></span>
+              </div>
+            </div>
+
+          </div> <!-- End Popover -->
+        </div> <!-- End Pill Right -->
+      </div> <!-- End Pill Controls -->
+
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ----- GEAR POPOVER TOGGLE -----
+      const gearBtn = document.getElementById('gearBtn');
+      const popover = document.getElementById('settingsPopover');
+      let popoverOpen = false;
+
+      function togglePopover(e) {
+        e.stopPropagation();
+        popoverOpen = !popoverOpen;
+        if (popoverOpen) {
+          popover.classList.add('active');
+        } else {
+          popover.classList.remove('active');
+          resetPanels();
+        }
+      }
+
+      function resetPanels() {
+        // Reset navigation to show main menu panel
+        const panels = popover.querySelectorAll('.popover-panel');
+        panels.forEach(p => p.classList.remove('active'));
+        const mainPanel = document.getElementById('mainPanel');
+        if (mainPanel) mainPanel.classList.add('active');
+      }
+
+      if (gearBtn) {
+        gearBtn.addEventListener('click', togglePopover);
+      }
+
+      // Close popover when clicking outside
+      document.addEventListener('click', function(e) {
+        if (popoverOpen) {
+          const isInside = popover.contains(e.target) || gearBtn.contains(e.target);
+          if (!isInside) {
+            popover.classList.remove('active');
+            popoverOpen = false;
+            resetPanels();
+          }
+        }
+      });
+
+      // Close on escape
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && popoverOpen) {
+          popover.classList.remove('active');
+          popoverOpen = false;
+          resetPanels();
+        }
+      });
+
+      // ----- PANEL NAVIGATION (Multi-level layout) -----
+      const menuItems = popover.querySelectorAll('.menu-item');
+      menuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const panelId = this.getAttribute('data-panel');
+          const targetPanel = document.getElementById(panelId);
+          if (targetPanel) {
+            popover.querySelectorAll('.popover-panel').forEach(p => p.classList.remove('active'));
+            targetPanel.classList.add('active');
+          }
+        });
+      });
+
+      const backButtons = popover.querySelectorAll('.back-btn');
+      backButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const panelId = this.getAttribute('data-panel');
+          const targetPanel = document.getElementById(panelId);
+          if (targetPanel) {
+            popover.querySelectorAll('.popover-panel').forEach(p => p.classList.remove('active'));
+            targetPanel.classList.add('active');
+          }
+        });
+      });
+
+      // ----- SUBPANEL OPTION SELECTION -----
+      const popoverOptions = popover.querySelectorAll('.popover-option');
+      popoverOptions.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const section = this.closest('.popover-panel');
+          if (section) {
+            section.querySelectorAll('.popover-option').forEach(o => {
+              o.classList.remove('active');
+              const check = o.querySelector('.check');
+              if (check) check.innerHTML = '';
+            });
+          }
+          this.classList.add('active');
+          const check = this.querySelector('.check');
+          if (check) check.innerHTML = '<i class="fas fa-check"></i>';
+
+          // Update main menu previews dynamically
+          const selectedValue = this.getAttribute('data-value');
+          if (section.id === 'audioPanel') {
+            document.getElementById('audioSelectionLabel').textContent = selectedValue;
+          } else if (section.id === 'subtitlePanel') {
+            document.getElementById('subtitleSelectionLabel').textContent = selectedValue;
+          }
+
+          // Return to main menu automatically after selection
+          setTimeout(() => {
+            resetPanels();
+          }, 240);
+        });
+      });
+
+      // ----- PROGRESS SEEK -----
+      const playedFill = document.getElementById('playedFill');
+      const progressThumb = document.getElementById('progressThumb');
+      const seekOverlay = document.getElementById('seekOverlay');
+      const trackWrapper = document.getElementById('trackWrapper');
+
+      function setProgress(percent) {
+        const clamped = Math.min(100, Math.max(0, percent));
+        const rounded = Math.round(clamped);
+        if (playedFill) playedFill.style.width = rounded + '%';
+        if (progressThumb) progressThumb.style.left = rounded + '%';
+      }
+
+      function handleSeek(e) {
+        const rect = trackWrapper.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percent = Math.min(100, Math.max(0, (x / rect.width) * 100));
+        setProgress(percent);
+      }
+
+      if (seekOverlay) {
+        seekOverlay.addEventListener('click', function(e) {
+          e.stopPropagation();
+          handleSeek(e);
+        });
+      }
+
+      if (trackWrapper) {
+        trackWrapper.addEventListener('click', function(e) {
+          if (e.target === this || e.target.classList.contains('track-base') ||
+              e.target.classList.contains('track-remaining') || e.target.classList.contains('track-played')) {
+            handleSeek(e);
+          }
+        });
+      }
+
+      // ----- PLAY/PAUSE TOGGLE -----
+      const playBtn = document.querySelector('.play-icon');
+      if (playBtn) {
+        playBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const icon = this.querySelector('i');
+          if (icon) {
+            if (icon.classList.contains('fa-play')) {
+              icon.classList.remove('fa-play');
+              icon.classList.add('fa-pause');
+            } else {
+              icon.classList.remove('fa-pause');
+              icon.classList.add('fa-play');
+            }
+          }
+        });
+      }
+
+      // ----- VOLUME ICON CYCLE -----
+      const volBtn = document.querySelector('.pill-left .pill-btn:last-child');
+      if (volBtn) {
+        volBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const icon = this.querySelector('i');
+          if (icon) {
+            if (icon.classList.contains('fa-volume-up')) {
+              icon.classList.remove('fa-volume-up');
+              icon.classList.add('fa-volume-mute');
+            } else if (icon.classList.contains('fa-volume-mute')) {
+              icon.classList.remove('fa-volume-mute');
+              icon.classList.add('fa-volume-down');
+            } else {
+              icon.classList.remove('fa-volume-down');
+              icon.classList.add('fa-volume-up');
+            }
+          }
+        });
+      }
+
+      // ----- DRAG THUMB -----
+      let isDragging = false;
+      if (progressThumb) {
+        progressThumb.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          isDragging = true;
+        });
+
+        document.addEventListener('mousemove', function(e) {
+          if (!isDragging) return;
+          const rect = trackWrapper.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const percent = Math.min(100, Math.max(0, (x / rect.width) * 100));
+          setProgress(percent);
+        });
+
+        document.addEventListener('mouseup', function() {
+          isDragging = false;
+        });
+      }
+
+      // Prevent popover from closing when clicking inside it
+      popover.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+node_modules/
+
+# Session/database files
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
+*.binlog
+
+# Secrets
+.env
+.env.*
