@@ -197,7 +197,7 @@ Audio
 Subtitles
  ├── English
  ├── Malayalam
- └── Arabic
+ └── Korean
 ```
 
 The player can expose available tracks and allow the user to select the appropriate audio or subtitle track.
