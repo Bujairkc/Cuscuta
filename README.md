@@ -10,6 +10,13 @@ Cuscuta is designed to work with media files that you **own or have the legal ri
 **Repository:** https://github.com/Bujairkc/Cuscuta.git
 
 ---
+## Screenshots
+
+![Screenshot 1](screenshots/1.png)
+
+![Screenshot 2](screenshots/2.png)
+
+![Screenshot 3](screenshots/3.png)
 
 ## Features
 
