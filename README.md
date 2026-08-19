@@ -359,3 +359,5 @@ Cuscuta is provided for legitimate personal and technical use only.
 The project does not endorse or support copyright infringement.
 
 Use responsibly and only with content you are legally permitted to access.
+
+## Copyright 2026 Sea On Side
